@@ -49,8 +49,7 @@ import wx.html
 import wx.lib.plot as wxPlot
 import sys
 import os
-import re
-import getopt
+from optparse import OptionParser
 from datetime import datetime as Datetime
 from scipy.stats import scoreatpercentile
 
@@ -811,7 +810,10 @@ class MyApp(wx.App):
     '''Our application class (basically main() )
     '''
     def OnInit(self):
-        '''Initialize by creating the split window with the tree
+        '''Initialize by creating the split window with the tree.  Also
+        determine the type of OS we are running on and process any
+        cli command args that may have been passed. Read in the 
+        csv file and set up datastructures.
         '''
         # discover what kind of OS we are running on
         # (note: isWindowsG is a global!)
@@ -820,13 +822,17 @@ class MyApp(wx.App):
             isWindowsG = True
         else:
             isWindowsG = False
+
+
         # process command line arguments
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "dl:f")
-        except getopt.GetoptError  as err:
-            # print help information and exit:
-            print("usage: esxplot [-d | -l logfile] [dataset]\n")
-            sys.exit(2)
+        parser = OptionParser(usage="usage: %prog [options] [dataset]")
+        parser.add_option("-d", "--debug", dest="debug",
+                          action="store_true", default=False,
+                          help="output logs to the console")
+        parser.add_option("-l", "--logpath", dest="logpath",
+                          type="string", default=None,
+                          help="path to write the logfiles to")
+        (opts, args) = parser.parse_args()
 
         if isWindowsG:
             logfile_path = os.path.expanduser("~") +\
@@ -837,14 +843,12 @@ class MyApp(wx.App):
             logfile_name = "/esxplot.log"
 
 
-        for o, a in opts:
-            if o =="-d":
-                logfile_path = None
-                logfiledes = sys.stdout
-                break   # nothing to do, output to the console
-            if o == "-l":
-                logfile_path = a
-                break
+        if opts.debug:
+            logfile_path = None
+            logfiledes = sys.stdout
+        if opts.logpath:
+            logfile_path = opts.logpath
+
 
         if logfile_path:
             if not os.access(logfile_path, os.F_OK):
