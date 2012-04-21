@@ -124,6 +124,9 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
         # Bind the OnSelChanged method to the tree
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelection, id=1)
+        ######## HACK ALERT #############################
+        # Catch tree expansion events here!
+        self.tree.Bind(wx.EVT_TREE_ITEM_EXPANDING,self.OnExpand, id=1)
         # Bind the right click event (for query result set deletion)
         self.tree.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnRightClick,
                        id=wx.ID_ANY)
@@ -371,18 +374,18 @@ class MyFrame(esxp_gui.EsxPlotFrame):
                 # we have a valid filename, let's get this Party started
         ###### HACK ALERT ################
         # Datasource is called at the top level to read in the csv files and build the
-        # Initial in emory datastructure containing the actual data, tree.MyTreeLoad(csv)
+        # Initial in Memory datastructure containing the actual data, tree.MyTreeLoad(csv)
         # Is called to actually load the selection pane, these two need to be re-written
-                v = esxp_datasource.DataSource( fpath)
+                self.datavector = esxp_datasource.DataSource( fpath)
             except (ValueError,csv.Error)as err:
                 self.MyAlert(fpath + " doesn't seem to be an estop data set,"\
                    + str(err))
                 return
 
-            self.datavector = v # set datavector so other
-                                # methods can find the info
-            self.tree.MyTreeLoad(v)        # bring up the GUI
-            self.MyTextUpdate(self.datavector.FileInfoString)
+
+
+            self.tree.MyTreeLoad(self.datavector)             # bring up the GUI
+            self.MyTextUpdate(self.datavector.FileInfoString) # update the status window
             self.isDatasetLoaded = True
             return
 
@@ -535,6 +538,13 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         return
 
     # Widget Call backs
+    def OnExpand(self, event):
+        '''
+        Called when the user tries to expand part of the treecontrol, we will use
+        this to update the tree, just log for now.
+        '''
+        self.log.info("Enter OnExpand")
+        return
     def OnSelection(self, event):
         '''
         Method called when selected item is changed ( click on a metric and

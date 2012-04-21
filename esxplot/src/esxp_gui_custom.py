@@ -28,6 +28,9 @@ import wx
 import wx.lib.plot as wxPlot
 import string as _string
 
+
+
+############################## HACK ALERT ###############################
 class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
     '''This customized TreeCtrl class has the __init__ subclassed to
     do the heavy lifting, also merge for integrating the results of
@@ -35,12 +38,12 @@ class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
     to collapse the tree if it's expanded.
     '''
 
-    def __init__(self, parent, id, position, size, style):
+    def __init__(self, parent, iid, position, size, style):
         '''Load up the TreeCntrl data structure with information from
         our very own 'tnode' DB
         '''
         # Call parent constructor
-        wx.TreeCtrl.__init__(self, parent, id, position, size, style)
+        wx.TreeCtrl.__init__(self, parent, iid, position, size, style)
         return
 
     def MyTreeLoad(self,v):
@@ -53,6 +56,11 @@ class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
         self.root = self.AddRoot(self.tnodeDB[0])
         self.merge(v,v.dRoot,color='BLACK')
         return
+######################### HACK ALERT ###############################
+# Right now this routine is used to brut force the entire dataset into the Window System's
+# TreeControl wdget, very ugly, slow and wasteful. What needs to happen is that the initial
+# load should just load the root and the top level parts from the pytrie structure, and additional
+# elements of the tree are "merged" as user clicks
 
     def merge(self,cslv,merge_root,color="ORANGE"):
         """
