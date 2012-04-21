@@ -38,6 +38,8 @@ class M_node :
         self.mmean= mmean
         self.m90th = m90th
 
+##### This is a good place to begin for 1.5 REFACTORING. Consider replacing 
+##### this with a trie structure
 class DataSource : ### candidate for refactoring for 1.1
     """ This class reads the data from the esxtop batch dump file
     which is in CSV format.  The file itself can be quite large
@@ -232,9 +234,3 @@ class HvTree : ### candidate for refactoring for 1.1
             return True
         else:
             return False
-
-
-
-
-
-
