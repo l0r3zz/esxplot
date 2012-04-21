@@ -6,6 +6,7 @@ Created on Apr 15, 2010
 import csv
 import os
 import wx
+import logging
 import collections
 import time as Time
 
@@ -53,19 +54,26 @@ class DataSource : ### candidate for refactoring for 1.1
 
     def __init__(self, filearg) :
 
-
+        self.log = logging.getLogger('esxplot.%s' % __name__)
         filedes = open(filearg)
         test = filedes.read(16)
         if test.find('"(PDH-CSV 4.0)') == -1: # is this a valid esxtop data set?
-            filedes.close()                     # nope
-            raise ValueError("Corrupt Header Information")
+            filedes.close()
+            error_txt = "Corrupt Header Information"
+            self.log.error(error_txt)                    # nope
+            raise ValueError(error_txt)
 
-        filedes.seek(0)                         # reset the file
+
+        row_num =sum(1 for row in filedes )        # count the number of rows
+        filedes.seek(0)                            #reset the file 
+
         statinfo = os.stat(filearg)
         try:
             v = csv.reader(filedes)
         except:
-            raise ValueError("Not a csv file")
+            error_txt = "Not a csv file"
+            self.log.error(error_txt)
+            raise ValueError(error_txt)
 
         self.labels = v.next()                  # get the label descriptions
         # Initialize the t-node datastructure
@@ -76,7 +84,8 @@ class DataSource : ### candidate for refactoring for 1.1
                                    maximum = (self.colmag*2),
                                    style=wx.PD_ELAPSED_TIME|wx.PD_AUTO_HIDE)
         for j in xrange(0, self.colmag):        # Loop through all of the labels
-            self.labels[j] += '\\ '+str(j)      # add the column index
+            #self.labels[j] += '\\ '+str(j)      # add the column index
+            self.labels[j] = '%s\\ %s' % (self.labels[j],str(j)) # faster?
             if j%100 == 0 :
                 dlg.Update( j )
         dlg.Update(self.colmag,"sorting...")
@@ -111,19 +120,18 @@ class DataSource : ### candidate for refactoring for 1.1
         for row in v:
             # throw away a "malformed"  row and don't count it.
             if len(row) < self.colmag -1:
+                self.log.warn("row %d  in %s was flagged as malformed" % (row, filearg))
                 continue
             # changed to iterate over length of input data, because some
             # versions of esxtop write a null last row
             self.samplemag += 1          # count the number of records read
             for j in xrange(len(row)):
                 self.columns[j].append(row[j])
-            dlg.Update(self.colmag*2 -1,"Loading Data" )
+            updt = int(self.colmag*2*self.samplemag/row_num)
+            dlg.Update(updt,"Loading CSV Data" )
 
         if self.samplemag < 2:
             raise ValueError("Only one sample")
-
-        dlg.Update(self.colmag*2)
-        dlg.Destroy()
 
         timeformat = '%m/%d/%Y %H:%M:%S'
 
@@ -151,6 +159,8 @@ class DataSource : ### candidate for refactoring for 1.1
                                       filearg, str(statinfo.st_size),
                                       self.starttime, self.endtime,
                                       str(self.colmag), str(self.samplemag) )
+        dlg.Update(self.colmag*2) # Take down the progress bar.
+        dlg.Destroy()
 
         return
 

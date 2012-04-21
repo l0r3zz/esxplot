@@ -41,7 +41,7 @@ MAXQUERYLENGTH = 4096  # Maximum size of a regex query
 MAXDisplayQueryLength = 20
 
 
-import exp_mylog
+#import exp_mylog
 import logging
 import wx
 import wx.html
@@ -50,7 +50,7 @@ import sys
 import os
 import re
 import esxp_gui
-from optparse import OptionParser
+#from optparse import OptionParser
 
 from scipy.stats import scoreatpercentile
 import exp_manpage
@@ -61,12 +61,12 @@ class MyFrame(esxp_gui.EsxPlotFrame):
     '''This is the main "work horse" class. Most of the methods called
     here do the brunt of the displaying and receive all of the input.
     '''
-    def __init__(self, parent, id, title, csvl):
+    def __init__(self, parent, iid, title, csvl):
         '''Initialize our window, create all panel and widgets '''
         # discover what kind of OS we are running on
         self.isWindowsG = True if os.name == 'nt' else False
         self.log = logging.getLogger('esxplot.%s' % __name__)
-        esxp_gui.EsxPlotFrame.__init__(self, parent, id, title,
+        esxp_gui.EsxPlotFrame.__init__(self, parent, iid, title,
                           wx.DefaultPosition, wx.Size(900, 450))
 
         self.datavector = csvl  # current dataset object reference
@@ -135,6 +135,11 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.SetStatusText(version)
         self.MyTextUpdate([version, copyright])
         self.MyTextUpdate("wxPython version = " + wx.VERSION_STRING)
+
+        ###### HACK ALERT ################
+        # Datasource is called at the top level to read in the csv files and build the
+        # Initial in memory datastructure containing the actual data, tree.MyTreeLoad(csv)
+        # Is called to actually load the selection pane, these two need to be re-written
 
         if csvl != None: #if there is data loaded load the treectrl
             self.tree.MyTreeLoad(csvl)
@@ -364,7 +369,10 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
             try:
                 # we have a valid filename, let's get this Party started
-                ##################################HACK ALERT##################################
+        ###### HACK ALERT ################
+        # Datasource is called at the top level to read in the csv files and build the
+        # Initial in emory datastructure containing the actual data, tree.MyTreeLoad(csv)
+        # Is called to actually load the selection pane, these two need to be re-written
                 v = esxp_datasource.DataSource( fpath)
             except (ValueError,csv.Error)as err:
                 self.MyAlert(fpath + " doesn't seem to be an estop data set,"\
