@@ -9,6 +9,7 @@ import wx
 import logging
 import collections
 import time as Time
+import pytrie
 
 # use this string to format info on the loaded data set
 fileinfostring_fmt="""
@@ -92,11 +93,12 @@ class DataSource : ### candidate for refactoring for 1.1
         sorted_labels = self.labels[1:]       # copy all except the time column
         dlg.Update(self.colmag+ self.colmag/2)
         sorted_labels.sort()               # sort the copy in alphabetical order
-        # insert the time column back at the front
-        sorted_labels.insert(0,self.labels[0])
+        trie_load = []
 
-        for j in xrange(1,self.colmag):
+        for j in xrange(0,self.colmag-1):
             # turn label into a list of path elements
+            (x,y,z) = sorted_labels[j].rpartition("\\")
+            trie_load.append((x,z))
             m = sorted_labels[j].split('\\')
             if len(m) < 4 :
                 ##### silently ignoring the null column for the UI but
@@ -108,9 +110,9 @@ class DataSource : ### candidate for refactoring for 1.1
             if j%100 == 0 :
                 dlg.Update(self.colmag + j,"Building data structures" )
 
-        # make it available to others (without the time column)
-        self.l = sorted_labels[1:]
-
+        #################################### HACK ALERT #####################
+        # Load trie structure
+        self.mytrie = pytrie.SortedStringTrie(trie_load)
         # set up a list of lists
         self.columns = [[] for i in xrange( self.colmag)]
         # initialize the count of non-title (data) records read
@@ -152,6 +154,7 @@ class DataSource : ### candidate for refactoring for 1.1
 
         self.reQueries =[]  # list of regex queries entered
         self.v = v
+        self.l = sorted_labels
 
 
         self.FileInfoString =\
