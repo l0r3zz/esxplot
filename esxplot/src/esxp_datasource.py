@@ -95,10 +95,13 @@ class DataSource : ### candidate for refactoring for 1.1
         sorted_labels.sort()               # sort the copy in alphabetical order
         trie_load = []
 
+        # Determine the root of the treecntrl tree generally the hostname (for now)
+        # [0] sorted element is the null so get [1]
+        self.host_root = sorted_labels[1].split('\\')[2] 
+
         for j in xrange(0,self.colmag-1):
             # turn label into a list of path elements
-            (x,y,z) = sorted_labels[j].rpartition("\\")
-            trie_load.append((x,z))
+
             m = sorted_labels[j].split('\\')
             if len(m) < 4 :
                 ##### silently ignoring the null column for the UI but
@@ -107,12 +110,28 @@ class DataSource : ### candidate for refactoring for 1.1
             # add the path into the t-node tree, truncating the two
             # null elements at the front of the list
             self.dRoot.addMetric([ m[k] for k in xrange (2,len(m))])
+            (x,y,z) = sorted_labels[j].rpartition('\\')
+            x =x[2:]
+            trie_load.append((x,z))
             if j%100 == 0 :
                 dlg.Update(self.colmag + j,"Building data structures" )
 
         #################################### HACK ALERT #####################
         # Load trie structure
         self.mytrie = pytrie.SortedStringTrie(trie_load)
+        seen = set()
+        seen_add = seen.add
+        self.top_gui_list = []
+        for x in self.mytrie.keys():
+            flist = x.split('\\')
+            (found,sep,rest) = flist[1].partition("(")
+            if found not in seen and not seen_add(found):
+                self.top_gui_list.append(found)
+        print "self.host_root=%s" % self.host_root
+        print "self.top_gui_list=%s" % self.top_gui_list
+        # One way to assemble a key prefix...
+        key = '%s\\%s' % (self.host_root,  self.top_gui_list[0])
+        print key, self.mytrie.keys(prefix=key)
         # set up a list of lists
         self.columns = [[] for i in xrange( self.colmag)]
         # initialize the count of non-title (data) records read
