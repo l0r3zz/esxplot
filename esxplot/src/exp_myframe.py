@@ -367,7 +367,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
             if os.path.exists(fpath) == False:
                 print("?File not found - " + fpath)
-                exit()
+                return
 
 
             try:
