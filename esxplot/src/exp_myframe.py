@@ -366,8 +366,8 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             fpath = self.dirname+'/'+self.filename
 
             if os.path.exists(fpath) == False:
-                print("?File not found - "+sys.argv[1])
-                exit()
+                print("?File not found - " + fpath)
+                return
 
 
             try:
@@ -413,7 +413,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             fpath = dirname + '/' + filename
 
             if os.path.exists(fpath) == False:
-                self.MyAlert("?File not found - " + sys.argv[1])
+                self.MyAlert("?File not found - " + fpath)
                 return
             f = open(fpath,"rb")
             rawqueries = f.readlines()        # read the entire query file
