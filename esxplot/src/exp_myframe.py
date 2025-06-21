@@ -466,7 +466,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
                     return
 
             try:
-                fildes = open(fpath, 'wb')
+                fildes = open(fpath, 'w', newline='')
             except:
                 self.MyAlert("File " + fpath +\
                     " could not be opened for writing, check permissions")
@@ -491,7 +491,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             labelinfo = [ x.rsplit('\\',1)[0] for x in l]
             v.writerow(labelinfo)        #write out the label information
 
-            for i in xrange(self.datavector.samplemag):
+            for i in range(self.datavector.samplemag):
                 rowvalues =\
                    [str(self.datavector.columns[int(x)][i]) for x in columnlist]
                 v.writerow(rowvalues)
@@ -526,7 +526,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
                 if not self.MyDialog("File exist, Overwrite?"):
                     return
             try:
-                fildes = open(fpath,'wb')
+                fildes = open(fpath, 'w', newline='')
             except:
                 self.MyAlert("File " + fpath +\
                     " could not be opened for writing, check permissions")
@@ -600,13 +600,13 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             elif (self.lgndlen == 0):
                 legend = ""
 
-            # use a list comprehension with xrange to create the
+            # use a list comprehension with range to create the
             # co-ordinate tuples
             data = [(self.datavector.time_axis[x-1],\
-                float(columndata[x])) for x in xrange (1, numberofsamples)]
+                float(columndata[x])) for x in range (1, numberofsamples)]
 
             float_data = [float(columndata[x])\
-                for x in xrange(1, numberofsamples)]
+                for x in range(1, numberofsamples)]
 
             # draw points as a line
             line.append(wxPlot.PolyLine(data,
@@ -663,8 +663,8 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             regExObject = re.compile(
                                      self._raw(regExString.rstrip('\n')),
                                      re.IGNORECASE|re.VERBOSE)
-        except:
-            self.MyAlert("Unrecognizable Regular Expression!")
+        except re.error as e:
+            self.MyAlert(f"Invalid Regular Expression: {str(e)}")
             return
         query_display = (regExString.strip()).replace('\n',' ')
         #################################### HACK ALERT ################################
@@ -677,7 +677,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         if len(regExString) > MAXDisplayQueryLength:
             query_display = regExString[:MAXDisplayQueryLength] + "..."
 
-        for j in xrange(self.datavector.colmag-1): # ugly, fix me
+        for j in range(self.datavector.colmag-1): # ugly, fix me
             if j % 100 ==0:
                     dlg.Update(j)
             # if no match go to the next one
@@ -691,7 +691,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             m[2] = 'Query: ' + query_display
             # add the path into the t-node tree, truncating the
             # two null elements at the front of the list
-            result_set_tree.addMetric([ m[k] for k in xrange (2, len(m))])
+            result_set_tree.addMetric([ m[k] for k in range (2, len(m))])
         if result_set_tree.isZero():
             self.MyAlert("Empty Result set for query:\n " + regExString)
         else:
