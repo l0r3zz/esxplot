@@ -3,7 +3,7 @@ Created on Apr 20, 2012
 
 @author: l0r3zz
 '''
-version = "esxplot v1.5-04202012"
+version = "esxplot v1.5-062112025"
 copyright = """
 (c)Copyright 2009 VMware Inc.
 (c)Copyright 2012 Geoff White
@@ -100,16 +100,16 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.banner.SetLabel(label=version)
         self.menu.Append(esxp_gui.ID_ABOUT, "&About",version)
         # enable the zoom feature (drag a box around area of interest)
-        self.plotter.SetEnableZoom(True)
+        self.plotter.enableZoom = True
         # Set the font size of the Title
-        self.plotter.SetFontSizeTitle(12)
+        self.plotter.fontSizeTitle = 12
         # Enable Legends
-        self.plotter.SetEnableLegend(True)
+        self.plotter.enableLegend = True
         # set up the Grid and tell MyPlotCanvas whether we're
         # running Windows or not
-        self.plotter.SetEnableGrid(True)
-        self.plotter.SetGridColour('LIGHT GREY')
-        self.plotter.SetOS(self.isWindowsG)
+        self.plotter.enableGrid = True
+        self.plotter.gridColor = 'LIGHT GREY'
+        self.plotter.os = self.isWindowsG
         # Register call back routines for various UI elements here
         wx.EVT_MENU(self, esxp_gui.ID_EXIT,  self.TimeToQuit)
         wx.EVT_MENU(self, esxp_gui.ID_ABOUT,  self.OnAbout)

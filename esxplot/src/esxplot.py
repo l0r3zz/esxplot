@@ -19,6 +19,10 @@ import esxp_datasource
 class MyApp(wx.App):
     '''Our application class (basically main() )
     '''
+    def __init__(self, *args, **kwargs):
+        wx.App.__init__(self, *args, **kwargs)
+        self.savestdout = sys.stdout
+        self.savestderr = sys.stderr
     def OnInit(self):
         '''Initialize by creating the split window with the tree.  Also
         determine the type of OS we are running on and process any
@@ -34,7 +38,9 @@ class MyApp(wx.App):
                           help="output logs to the console")
         parser.add_argument("-l", "--logpath", type=str,
                           help="path to write the logfiles to")
-        (opts, args) = parser.parse_args()
+        parser.add_argument('file', nargs='?', help="esxtop data file to load")
+        args = parser.parse_args()
+        opts = args
 
         if isWindowsG:
             logfile_path = os.path.expanduser("~") +\
@@ -56,7 +62,7 @@ class MyApp(wx.App):
                           lfile=logfile_path+logfile_name)
                 except Exception as e:
                     self.log = exp_mylog.logg('esxplot', llevel="INFO", cnsl=True)
-                    self.log.error(f"Can't create log file in {logfile_path}: {str(e)}")
+                    self.log.error("Can't create log file in %s: %s", logfile_path, str(e))
             else:
                 self.log = exp_mylog.logg('esxplot',llevel="INFO", lfile=logfile_path+logfile_name)
         else:
@@ -64,18 +70,18 @@ class MyApp(wx.App):
 
         self.log.info("Start run esxplot")
 
-        if len(args) == 0:   # called with no arguments, just start the GUI
+        if args.file is None:   # called with no arguments, just start the GUI
             v = None
         else:     # must have a filename argument, check it and read the data
-            if os.path.exists(args[0]) == False:
-                self.log.warn("?File not found - " + args[0])
+            if os.path.exists(args.file) == False:
+                self.log.warn("?File not found - " + args.file)
                 self._errstop()
             else:
                 try:
-                    v = esxp_datasource.DataSource(args[0])
+                    v = esxp_datasource.DataSource(args.file)
                 except (ValueError , csv.Error):
                     self.log.error("?File does not seem to be an esxtop data set - " + \
-                        args[0])
+                        args.file)
                     self._errstop()
         frame = MyFrame(None, -1, 'esxplot', v)
         frame.Show(True)

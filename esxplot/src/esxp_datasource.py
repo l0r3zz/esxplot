@@ -76,7 +76,7 @@ class DataSource : ### candidate for refactoring for 1.1
             self.log.error(error_txt)
             raise ValueError(error_txt)
 
-        self.labels = v.next()                  # get the label descriptions
+        self.labels = next(v)                  # get the label descriptions
         # Initialize the t-node datastructure
         self.dRoot = HvTree('%%ESXTreeRoot%%')
         # No. of columns in the bundle (dataset has a "null" column at the end)
@@ -91,7 +91,7 @@ class DataSource : ### candidate for refactoring for 1.1
                 dlg.Update( j )
         dlg.Update(self.colmag,"sorting...")
         sorted_labels = self.labels[1:]       # copy all except the time column
-        dlg.Update(self.colmag+ self.colmag/2)
+        dlg.Update(int(self.colmag + self.colmag/2))
         sorted_labels.sort()               # sort the copy in alphabetical order
         trie_load = []
 
@@ -114,7 +114,7 @@ class DataSource : ### candidate for refactoring for 1.1
             x =x[2:]
             trie_load.append((x,z))
             if j%100 == 0 :
-                dlg.Update(self.colmag + j,"Building data structures" )
+                dlg.Update(int(self.colmag + j),"Building data structures" )
 
         #################################### HACK ALERT #####################
         # Load trie structure
