@@ -3,7 +3,7 @@ Created on Apr 20, 2012
 
 @author: l0r3zz
 '''
-version = "esxplot v1.5-062112025"
+version = "esxplot v1.5-06212025"
 copyright = """
 (c)Copyright 2009 VMware Inc.
 (c)Copyright 2012 Geoff White
@@ -355,7 +355,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
         dlg = wx.FileDialog(self, "esxtop batch output file",
-                            self.dirname, "", "*.*", wx.OPEN)
+                            self.dirname, "", "*.*", wx.FD_OPEN)
 
         if dlg.ShowModal()==wx.ID_OK:
             self.filename=dlg.GetFilename()

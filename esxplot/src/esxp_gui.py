@@ -233,12 +233,16 @@ class EsxPlotFrame(wx.Frame):
         esxplot_statusbar_fields = ["esxplot_statusbar"]
         for i in range(len(esxplot_statusbar_fields)):
             self.esxplot_statusbar.SetStatusText(esxplot_statusbar_fields[i], i)
-        self.banner.SetFont(wx.Font(10, wx.DEFAULT, wx.ITALIC, wx.BOLD, 0, ""))
+        self.banner.SetFont(wx.Font(10, wx.DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, 0, ""))
+        self.banner.SetForegroundColour(wx.Colour(0, 0, 255))
+        self.banner.SetForegroundColour(wx.Colour("blue"))
+        self.banner.SetForegroundColour(wx.Colour("blue"))
+        self.banner.SetForegroundColour(wx.Colour("blue"))
         self.searchtext.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.queryText.SetMinSize((400, 60))
         self.queryButton.SetMinSize((40, 60))
         self.leftPanel.SetBackgroundColour(wx.Colour(225, 225, 225))
-        self.leftPanel.SetFont(wx.Font(10, wx.SWISS, wx.ITALIC, wx.BOLD, 0, ""))
+        self.leftPanel.SetFont(wx.Font(10, wx.SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, 0, ""))
         # end wxGlade
 
     def __do_layout(self):
