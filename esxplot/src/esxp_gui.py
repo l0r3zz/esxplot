@@ -234,11 +234,11 @@ class EsxPlotFrame(wx.Frame):
         for i in range(len(esxplot_statusbar_fields)):
             self.esxplot_statusbar.SetStatusText(esxplot_statusbar_fields[i], i)
         self.banner.SetFont(wx.Font(10, wx.DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, 0, ""))
-        self.banner.SetForegroundColour(wx.Colour(0, 0, 255))
         self.banner.SetForegroundColour(wx.Colour("blue"))
         self.banner.SetForegroundColour(wx.Colour("blue"))
         self.banner.SetForegroundColour(wx.Colour("blue"))
         self.searchtext.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.searchtext.SetForegroundColour(wx.Colour(0, 0, 0))
         self.queryText.SetMinSize((400, 60))
         self.queryButton.SetMinSize((40, 60))
         self.leftPanel.SetBackgroundColour(wx.Colour(225, 225, 225))
