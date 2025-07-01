@@ -105,22 +105,26 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.plotter.fontSizeTitle = 12
         # Enable Legends
         self.plotter.enableLegend = True
+        # Customize zoom box appearance
+        self.plotter.zoomColor = 'RED'
+        self.plotter.zoomLine = 'DOTTED'
+        self.plotter.zoomWidth = 3        
         # set up the Grid and tell MyPlotCanvas whether we're
         # running Windows or not
         self.plotter.enableGrid = True
         self.plotter.gridColor = 'LIGHT GREY'
         self.plotter.os = self.isWindowsG
         # Register call back routines for various UI elements here
-        wx.EVT_MENU(self, esxp_gui.ID_EXIT,  self.TimeToQuit)
-        wx.EVT_MENU(self, esxp_gui.ID_ABOUT,  self.OnAbout)
-        wx.EVT_MENU(self, esxp_gui.ID_IMPORT_DATA_BATCH,  self.OnImportData)
-        wx.EVT_MENU(self, esxp_gui.ID_IMPORT_QUERIES, self.OnImportQueries)
-        wx.EVT_MENU(self, esxp_gui.ID_PREF,  self.OnPrefs)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_GRAPHS,  self.OnExportGraphs)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_COLS, self.OnExportColumns)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_QUERIES, self.OnExportQueries)
-        wx.EVT_MENU(self, esxp_gui.ID_CLOSE_DATASET, self.OnCloseDataset)
-        wx.EVT_MENU(self, esxp_gui.ID_HELP,self.OnHelp)
+        self.Bind(wx.EVT_MENU, self.TimeToQuit, id=esxp_gui.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=esxp_gui.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnImportData, id=esxp_gui.ID_IMPORT_DATA_BATCH)
+        self.Bind(wx.EVT_MENU, self.OnImportQueries, id=esxp_gui.ID_IMPORT_QUERIES)
+        self.Bind(wx.EVT_MENU, self.OnPrefs, id=esxp_gui.ID_PREF)
+        self.Bind(wx.EVT_MENU, self.OnExportGraphs, id=esxp_gui.ID_EXPORT_GRAPHS)
+        self.Bind(wx.EVT_MENU, self.OnExportColumns, id=esxp_gui.ID_EXPORT_COLS)
+        self.Bind(wx.EVT_MENU, self.OnExportQueries, id=esxp_gui.ID_EXPORT_QUERIES)
+        self.Bind(wx.EVT_MENU, self.OnCloseDataset, id=esxp_gui.ID_CLOSE_DATASET)
+        self.Bind(wx.EVT_MENU, self.OnHelp, id=esxp_gui.ID_HELP)
 
         # Bind the OnSelChanged method to the tree
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelection, id=1)
@@ -482,7 +486,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             for item in itemlist:
                 traversal_result.extend(self.tree.MyTreeLeafList(item))
             for item in traversal_result:
-                columnindex = self.tree.GetPyData(item)
+                columnindex = self.tree.GetItemData(item)
                 if columnindex == None:
                     continue
                 columnlist.append(columnindex)
@@ -553,8 +557,8 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
         selectionlist =\
-            [ self.tree.GetPyData(x)  for x in self.tree.GetSelections()\
-                if self.tree.GetPyData(x) != None ] #filter out trunk selections
+            [ self.tree.GetItemData(x)  for x in self.tree.GetSelections()\
+                if self.tree.GetItemData(x) != None ] #filter out trunk selections
         #log("SelectionList = "+str(selectionlist))
         if len(selectionlist) == 0:                  #no selections were made
             self.itemlist = []

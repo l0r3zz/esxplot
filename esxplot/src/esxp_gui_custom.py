@@ -88,7 +88,7 @@ class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
                     ctr +=1
                     third.append(self.AppendItem(second[-1],knode[0]))
                     # we're at the leaf, set the column index
-                    self.SetPyData(third[-1],knode[1][0])
+                    self.SetItemData(third[-1],knode[1][0])
                     # if the data is all zeros, set the color to light blue
                     if cslv.IsColZero(int(knode[1][0])):
                         self.SetItemTextColour(third[-1],'GREY')
