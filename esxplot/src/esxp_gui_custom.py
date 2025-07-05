@@ -152,6 +152,7 @@ class MyPlotCanvas(wxPlot.PlotCanvas):
         wxPlot.PlotCanvas.OnLeave(self,event)
 
 
+
     def SetOS(self,windowsP):
         self.isWindows = windowsP
 
