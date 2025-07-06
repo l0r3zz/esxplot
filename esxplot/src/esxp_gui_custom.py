@@ -88,7 +88,7 @@ class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
                     ctr +=1
                     third.append(self.AppendItem(second[-1],knode[0]))
                     # we're at the leaf, set the column index
-                    self.SetPyData(third[-1],knode[1][0])
+                    self.SetItemData(third[-1],knode[1][0])
                     # if the data is all zeros, set the color to light blue
                     if cslv.IsColZero(int(knode[1][0])):
                         self.SetItemTextColour(third[-1],'GREY')
@@ -137,80 +137,108 @@ class MyTreeCtrl(wx.TreeCtrl): ### candidate for refactoring for 1.1
 class MyPlotCanvas(wxPlot.PlotCanvas):
     def __init__(self, parent, id=-1, pos=wx.Point(-1, -1),
                  size=wx.Size(-1, -1), style=0, name='plotCanvas'):
+        # Call parent constructor first
+        super(MyPlotCanvas, self).__init__(parent, id, pos, size, style, name)
+        
+        # Initialize custom attributes
         self.isWindows = False
         self.defDir = ""
-        wxPlot.PlotCanvas.__init__(self, parent, id, pos, size, style, name)
+        
+        # Use our own state for drawing the zoom box to avoid interfering
+        # with the parent class's internal state (_zoomCorner1).
+        self._zoomBoxCorner1_client = None
 
+    def OnMouseLeftDown(self, event):
+        # This method is now an override, not a new binding.
+        if self.enableZoom:
+            # Store the start of the zoom box in client coordinates.
+            self._zoomBoxCorner1_client = event.GetPosition()
+        
+        # IMPORTANT: Call the parent's method to ensure its logic runs.
+        super(MyPlotCanvas, self).OnMouseLeftDown(event)
 
-    def OnLeave(self,event):
-        # place holder for code to handle LEAVE_WINDOW and
-        # send Left-MouseButton-Up
-        if (self.isWindows and  event.LeftIsDown()) :
-            # try to return the up event when leaving
-            wxPlot.PlotCanvas.OnMouseLeftUp(self,event)
-        # call the superclass method I just overode
-        wxPlot.PlotCanvas.OnLeave(self,event)
+    def OnMotion(self, event):
+        # If we are in the middle of a zoom drag, draw our custom box.
+        if event.Dragging() and event.LeftIsDown() and self.enableZoom and self._zoomBoxCorner1_client is not None:
+            self._drawZoomBox(self._zoomBoxCorner1_client, event.GetPosition())
+        
+        # IMPORTANT: Call the parent's method to ensure its logic runs.
+        super(MyPlotCanvas, self).OnMotion(event)
 
+    def OnMouseLeftUp(self, event):
+        if self._zoomBoxCorner1_client is not None:
+            # Reset our zoom box state.
+            self._zoomBoxCorner1_client = None
+            # Redraw to ensure the last drawn box is erased. The parent's
+            # final zoom action will also cause a redraw, but this is safer.
+            self.Redraw()
+            
+        # IMPORTANT: Call the parent's method to perform the actual zoom.
+        super(MyPlotCanvas, self).OnMouseLeftUp(event)
 
-    def SetOS(self,windowsP):
+    def _drawZoomBox(self, corner1, corner2):
+        """Draws the zoom box on the canvas using client coordinates."""
+        # Redraw the plot from the buffer to erase any previous box.
+        self.Redraw()
+        self.Update()
+
+        dc = wx.ClientDC(self)
+        pen_color = getattr(self, 'zoomColor', 'RED')
+        pen_width = getattr(self, 'zoomWidth', 1)
+        style_map = {
+            'SOLID': wx.PENSTYLE_SOLID,
+            'DOTTED': wx.PENSTYLE_DOT,
+            'DOT-DASH': wx.PENSTYLE_DOT_DASH,
+            'DASHED': wx.PENSTYLE_SHORT_DASH,
+        }
+        pen_style_str = getattr(self, 'zoomLine', 'DOTTED')
+        pen_style = style_map.get(pen_style_str, wx.PENSTYLE_DOT)
+
+        pen = wx.Pen(pen_color, pen_width, pen_style)
+        dc.SetPen(pen)
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.SetLogicalFunction(wx.COPY)
+
+        rect = wx.Rect(corner1, corner2)
+        dc.DrawRectangle(rect)
+
+    def SetOS(self, windowsP):
         self.isWindows = windowsP
 
-    def SaveFile(self,fileName= ''):
-        """Saves the file to the type specified in the extension. If no file
-        name is specified a dialog box is provided.  Returns True if sucessful,
-        otherwise False.
+    def SaveFile(self, fileName=''):
+        """Saves the plot to a file based on extension."""
+        wildcard = (
+            "PNG files (*.png)|*.png|"
+            "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|"
+            "BMP files (*.bmp)|*.bmp|"
+            "XBM files (*.xbm)|*.xbm|"
+            "XPM files (*.xpm)|*.xpm"
+        )
 
-        .bmp  Save a Windows bitmap file.
-        .xbm  Save an X bitmap file.
-        .xpm  Save an XPM bitmap file.
-        .png  Save a Portable Network Graphics file.
-        .jpg  Save a Joint Photographic Experts Group file.
-        """
-        extensions = {
-            "bmp": wx.BITMAP_TYPE_BMP,       # Save a Windows bitmap file.
-            "xbm": wx.BITMAP_TYPE_XBM,       # Save an X bitmap file.
-            "xpm": wx.BITMAP_TYPE_XPM,       # Save an XPM bitmap file.
-            "jpg": wx.BITMAP_TYPE_JPEG,      # Save a JPG file.
-            "png": wx.BITMAP_TYPE_PNG,       # Save a PNG file.
-            }
+        if not fileName:
+            with wx.FileDialog(
+                self, "Save plot as...",
+                defaultDir=self.defDir,
+                wildcard=wildcard,
+                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+            ) as dlg:
+                if dlg.ShowModal() != wx.ID_OK:
+                    return False
+                fileName = dlg.GetPath()
+                self.defDir = dlg.GetDirectory()
 
-        fType = _string.lower(fileName[-3:])
-        dlg1 = None
-        while fType not in extensions:
+        ext = fileName.split('.')[-1].lower()
+        bmp_type_map = {
+            'png': wx.BITMAP_TYPE_PNG,
+            'jpg': wx.BITMAP_TYPE_JPEG,
+            'jpeg': wx.BITMAP_TYPE_JPEG,
+            'bmp': wx.BITMAP_TYPE_BMP,
+            'xbm': wx.BITMAP_TYPE_XBM,
+            'xpm': wx.BITMAP_TYPE_XPM,
+        }
 
-            if dlg1:                  # FileDialog exists: Check for extension
-                dlg2 = wx.MessageDialog(self, 'File name extension\n'
-                'must be one of\nbmp, xbm, xpm, png, or jpg',
-                'File Name Error', wx.OK | wx.ICON_ERROR)
-                try:
-                    dlg2.ShowModal()
-                finally:
-                    dlg2.Destroy()
-            else:                     # FileDialog doesn't exist: just check one
-                dlg1 = wx.FileDialog(
-                    self,
-                    ("Choose a file with extension bmp, gif, xbm,"
-                     " xpm, png, or jpg"),
-                     self.defDir, "",
-                    ("BMP files (*.bmp)|*.bmp|XBM files (*.xbm)|*.xbm|XPM"
-                     " file (*.xpm)|*.xpm|PNG files (*.png)|*.pnga"
-                     "|JPG files (*.jpg)|*.jpg"),
-                    style=wx.SAVE|wx.OVERWRITE_PROMPT
-                    )
+        if ext not in bmp_type_map:
+            wx.MessageBox(f"Unsupported file type: '.{ext}'", "Save Error", wx.OK | wx.ICON_ERROR)
+            return False
 
-            if dlg1.ShowModal() == wx.ID_OK:
-                fileName = dlg1.GetPath()
-                self.defDir = dlg1.GetDirectory()
-                fType = _string.lower(fileName[-3:])
-            else:                      # exit without saving
-                dlg1.Destroy()
-                return False
-
-        dlg1.Destroy()
-
-        # Save Bitmap
-        res= self._Buffer.SaveFile(fileName, extensions[fType])
-        return res
-
-
-
+        return self._Buffer.SaveFile(fileName, bmp_type_map[ext])

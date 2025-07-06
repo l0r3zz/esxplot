@@ -71,12 +71,12 @@ class DataSource : ### candidate for refactoring for 1.1
         statinfo = os.stat(filearg)
         try:
             v = csv.reader(filedes)
-        except:
+        except ValueError as e:
             error_txt = "Not a csv file"
             self.log.error(error_txt)
             raise ValueError(error_txt)
 
-        self.labels = v.next()                  # get the label descriptions
+        self.labels = next(v)                  # get the label descriptions
         # Initialize the t-node datastructure
         self.dRoot = HvTree('%%ESXTreeRoot%%')
         # No. of columns in the bundle (dataset has a "null" column at the end)
@@ -84,14 +84,14 @@ class DataSource : ### candidate for refactoring for 1.1
         dlg =  wx.ProgressDialog ( 'Progress', 'Reading column labels.',
                                    maximum = (self.colmag*2),
                                    style=wx.PD_ELAPSED_TIME|wx.PD_AUTO_HIDE)
-        for j in xrange(0, self.colmag):        # Loop through all of the labels
+        for j in range(0, self.colmag):        # Loop through all of the labels
             #self.labels[j] += '\\ '+str(j)      # add the column index
             self.labels[j] = '%s\\ %s' % (self.labels[j],str(j)) # faster?
             if j%100 == 0 :
                 dlg.Update( j )
         dlg.Update(self.colmag,"sorting...")
         sorted_labels = self.labels[1:]       # copy all except the time column
-        dlg.Update(self.colmag+ self.colmag/2)
+        dlg.Update(int(self.colmag + self.colmag/2))
         sorted_labels.sort()               # sort the copy in alphabetical order
         trie_load = []
 
@@ -99,7 +99,7 @@ class DataSource : ### candidate for refactoring for 1.1
         # [0] sorted element is the null so get [1]
         self.host_root = sorted_labels[1].split('\\')[2] 
 
-        for j in xrange(0,self.colmag-1):
+        for j in range(0,self.colmag-1):
             # turn label into a list of path elements
 
             m = sorted_labels[j].split('\\')
@@ -109,12 +109,12 @@ class DataSource : ### candidate for refactoring for 1.1
                 continue
             # add the path into the t-node tree, truncating the two
             # null elements at the front of the list
-            self.dRoot.addMetric([ m[k] for k in xrange (2,len(m))])
+            self.dRoot.addMetric([ m[k] for k in range (2,len(m))])
             (x,y,z) = sorted_labels[j].rpartition('\\')
             x =x[2:]
             trie_load.append((x,z))
             if j%100 == 0 :
-                dlg.Update(self.colmag + j,"Building data structures" )
+                dlg.Update(int(self.colmag + j),"Building data structures" )
 
         #################################### HACK ALERT #####################
         # Load trie structure
@@ -127,13 +127,13 @@ class DataSource : ### candidate for refactoring for 1.1
             (found,sep,rest) = flist[1].partition("(")
             if found not in seen and not seen_add(found):
                 self.top_gui_list.append(found)
-        print "self.host_root=%s" % self.host_root
-        print "self.top_gui_list=%s" % self.top_gui_list
+        print("self.host_root=%s" % self.host_root)
+        print("self.top_gui_list=%s" % self.top_gui_list)
         # One way to assemble a key prefix...
         key = '%s\\%s' % (self.host_root,  self.top_gui_list[0])
-        print key, self.mytrie.keys(prefix=key)
+        print(key, self.mytrie.keys(prefix=key))
         # set up a list of lists
-        self.columns = [[] for i in xrange( self.colmag)]
+        self.columns = [[] for i in range( self.colmag)]
         # initialize the count of non-title (data) records read
         self.samplemag = 0
 
@@ -146,7 +146,7 @@ class DataSource : ### candidate for refactoring for 1.1
             # changed to iterate over length of input data, because some
             # versions of esxtop write a null last row
             self.samplemag += 1          # count the number of records read
-            for j in xrange(len(row)):
+            for j in range(len(row)):
                 self.columns[j].append(row[j])
             updt = int(self.colmag*2*self.samplemag/row_num)
             dlg.Update(updt,"Loading CSV Data" )
@@ -166,7 +166,7 @@ class DataSource : ### candidate for refactoring for 1.1
         t1 = Time.mktime(st2)
         self.timedelta = (t1 - t0)/self.samplemag
         self.time_axis = [0.0]
-        for i in xrange(1,self.samplemag):
+        for i in range(1,self.samplemag):
             self.time_axis.append(self.time_axis[i-1] +\
                 Time.mktime(Time.strptime(self.columns[0][i], timeformat))\
                 - Time.mktime(Time.strptime( self.columns[0][i-1], timeformat)))

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 #       http://www.apache.org/licenses/LICENSE-2.0
 #
 #   Unless required by applicable law or agreed to in writing, software
@@ -37,7 +37,7 @@ def logg(label, lfile=None, llevel='WARN', fmt=None, gmt=False, cnsl=None, sh=No
     >>> t = logg("test logger", cnsl=True, sh=sys.stdout) 
     >>> print t # doctest: +ELLIPSIS
     <...logging.Logger object at 0x...>
-    >>> t.warn("hello world!") #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> t.warning("hello world!") #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     2... WARNING    :test logger [...] hello world!
     >>> t.error("should see this")#doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     2... ERROR    :test logger [...] should see this
@@ -70,8 +70,8 @@ def logg(label, lfile=None, llevel='WARN', fmt=None, gmt=False, cnsl=None, sh=No
             fh = logging.FileHandler(lfile)
             fh.setFormatter(formatter)
             log.addHandler(fh)
-    except IOError :
-        print("Can't open location %s" % fh)
+    except OSError:
+        print("Can't open location {}".format(fh))
     if cnsl :
         if sh :
             ch = logging.StreamHandler(sh)
@@ -86,7 +86,7 @@ def logg(label, lfile=None, llevel='WARN', fmt=None, gmt=False, cnsl=None, sh=No
 def main():
     logger = logg("Test Logger",llevel='INFO', cnsl=True,sh=sys.stdout)
     logger.info("Hello World")
-    logger.warn("Danger Will Robinson")
+    logger.warning("Danger Will Robinson")
     logger.critical("Time to Die")
     logger.debug("0x1337")
 #    import doctest

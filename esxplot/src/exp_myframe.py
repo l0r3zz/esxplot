@@ -3,8 +3,8 @@ Created on Apr 20, 2012
 
 @author: l0r3zz
 '''
-version = "esxplot v1.5-04202012"
-copyright = """
+version = "esxplot v1.6-07052025"
+copyright_info = """
 (c)Copyright 2009 VMware Inc.
 (c)Copyright 2012 Geoff White
 
@@ -66,7 +66,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         # discover what kind of OS we are running on
         self.isWindowsG = True if os.name == 'nt' else False
         self.log = logging.getLogger('esxplot.%s' % __name__)
-        esxp_gui.EsxPlotFrame.__init__(self, parent, iid, title,
+        super(MyFrame, self).__init__(parent, iid, title,
                           wx.DefaultPosition, wx.Size(900, 450))
 
         self.datavector = csvl  # current dataset object reference
@@ -100,27 +100,31 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.banner.SetLabel(label=version)
         self.menu.Append(esxp_gui.ID_ABOUT, "&About",version)
         # enable the zoom feature (drag a box around area of interest)
-        self.plotter.SetEnableZoom(True)
+        self.plotter.enableZoom = True
         # Set the font size of the Title
-        self.plotter.SetFontSizeTitle(12)
+        self.plotter.fontSizeTitle = 12
         # Enable Legends
-        self.plotter.SetEnableLegend(True)
+        self.plotter.enableLegend = True
+        # Customize zoom box appearance
+        self.plotter.zoomColor = 'RED'
+        self.plotter.zoomLine = 'DOTTED'
+        self.plotter.zoomWidth = 3
         # set up the Grid and tell MyPlotCanvas whether we're
         # running Windows or not
-        self.plotter.SetEnableGrid(True)
-        self.plotter.SetGridColour('LIGHT GREY')
-        self.plotter.SetOS(self.isWindowsG)
+        self.plotter.enableGrid = True
+        self.plotter.gridColor = 'LIGHT GREY'
+        self.plotter.os = self.isWindowsG
         # Register call back routines for various UI elements here
-        wx.EVT_MENU(self, esxp_gui.ID_EXIT,  self.TimeToQuit)
-        wx.EVT_MENU(self, esxp_gui.ID_ABOUT,  self.OnAbout)
-        wx.EVT_MENU(self, esxp_gui.ID_IMPORT_DATA_BATCH,  self.OnImportData)
-        wx.EVT_MENU(self, esxp_gui.ID_IMPORT_QUERIES, self.OnImportQueries)
-        wx.EVT_MENU(self, esxp_gui.ID_PREF,  self.OnPrefs)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_GRAPHS,  self.OnExportGraphs)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_COLS, self.OnExportColumns)
-        wx.EVT_MENU(self, esxp_gui.ID_EXPORT_QUERIES, self.OnExportQueries)
-        wx.EVT_MENU(self, esxp_gui.ID_CLOSE_DATASET, self.OnCloseDataset)
-        wx.EVT_MENU(self, esxp_gui.ID_HELP,self.OnHelp)
+        self.Bind(wx.EVT_MENU, self.TimeToQuit, id=esxp_gui.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=esxp_gui.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnImportData, id=esxp_gui.ID_IMPORT_DATA_BATCH)
+        self.Bind(wx.EVT_MENU, self.OnImportQueries, id=esxp_gui.ID_IMPORT_QUERIES)
+        self.Bind(wx.EVT_MENU, self.OnPrefs, id=esxp_gui.ID_PREF)
+        self.Bind(wx.EVT_MENU, self.OnExportGraphs, id=esxp_gui.ID_EXPORT_GRAPHS)
+        self.Bind(wx.EVT_MENU, self.OnExportColumns, id=esxp_gui.ID_EXPORT_COLS)
+        self.Bind(wx.EVT_MENU, self.OnExportQueries, id=esxp_gui.ID_EXPORT_QUERIES)
+        self.Bind(wx.EVT_MENU, self.OnCloseDataset, id=esxp_gui.ID_CLOSE_DATASET)
+        self.Bind(wx.EVT_MENU, self.OnHelp, id=esxp_gui.ID_HELP)
 
         # Bind the OnSelChanged method to the tree
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelection, id=1)
@@ -137,7 +141,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.Bind(wx.EVT_CLOSE, self.OnCloseHelp)
         self.SetStatusText(version)
         self.MyTextUpdate([version, copyright])
-        self.MyTextUpdate("wxPython version = " + wx.VERSION_STRING)
+        self.MyTextUpdate(" wxPython version = " + wx.VERSION_STRING)
 
         ###### HACK ALERT ################
         # Datasource is called at the top level to read in the csv files and build the
@@ -183,7 +187,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         """
         if isinstance(message, str):
             self.textbox.AppendText(message)
-            self.log.warn("Console Status: %s" % message)
+            self.log.warning("Console Status: %s", message)
         elif isinstance (message, list):
             for m in message:
                 self.MyTextUpdate(m)
@@ -196,7 +200,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
     #Menu callbacks
-    def TimeToQuit(self, event):
+    def TimeToQuit(self, _event):
         """
         Exit the applixation
         """
@@ -205,16 +209,16 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.Close(True)                 # esxplot has left the building
 
     def OnCloseHelp(self, event):
-        if self.HelpIsLive:
-            self.HelpIsLive.Destroy()    #Destroy any Help windows lying around
-        self.Destroy()
+        # Called when the help dialog is closed.
+        self.HelpIsLive = None
+        event.GetEventObject().Destroy()
 
 
-    def OnAbout(self, event):
+    def OnAbout(self, _event):
         """
         Display an about message through a Message Dialog
         """
-        about_text = version + "\n" + copyright
+        about_text = version + "\n" + copyright_info
         dlg = wx.MessageDialog(self, about_text, "About Me",
                                wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
@@ -251,7 +255,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             dlg.tcl_rgb16.SetValue(self.color[15])
             return
 
-        def _color_reset(event):
+        def _color_reset(_event):
             '''
             Reset the colors to the initial defaults when the button is pushed
             '''
@@ -332,17 +336,16 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
     def OnHelp(self,event):
         if self.HelpIsLive:
-            dlg = self.HelpIsLive
-        else:
-            dlg = MyHelpDialog()
+            self.HelpIsLive.Raise()
+            return
 
-        html = wx.html.HtmlWindow(dlg, pos=(10, 10), size=(780, 430),
-                                  style=wx.html.HW_SCROLLBAR_AUTO )
-        html.SetStandardFonts()
-        html.SetPage(exp_manpage.man_page )
-        dlg.Show()
+        # Create and show the help dialog.
+        # It's a non-modal dialog, so we track its instance.
+        dlg = MyHelpDialog(self, exp_manpage.manpage)
         self.HelpIsLive = dlg
-        return
+        # We bind the close event to our handler to know when it's gone.
+        self.HelpIsLive.Bind(wx.EVT_CLOSE, self.OnCloseHelp)
+        self.HelpIsLive.Show()
 
     def OnImportData(self, event): ### candidate for refactoring for 1.1
         """
@@ -355,7 +358,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
         dlg = wx.FileDialog(self, "esxtop batch output file",
-                            self.dirname, "", "*.*", wx.OPEN)
+                            self.dirname, "", "*.*", wx.FD_OPEN)
 
         if dlg.ShowModal()==wx.ID_OK:
             self.filename=dlg.GetFilename()
@@ -466,7 +469,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
                     return
 
             try:
-                fildes = open(fpath, 'wb')
+                fildes = open(fpath, 'w', newline='')
             except:
                 self.MyAlert("File " + fpath +\
                     " could not be opened for writing, check permissions")
@@ -482,7 +485,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             for item in itemlist:
                 traversal_result.extend(self.tree.MyTreeLeafList(item))
             for item in traversal_result:
-                columnindex = self.tree.GetPyData(item)
+                columnindex = self.tree.GetItemData(item)
                 if columnindex == None:
                     continue
                 columnlist.append(columnindex)
@@ -491,7 +494,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             labelinfo = [ x.rsplit('\\',1)[0] for x in l]
             v.writerow(labelinfo)        #write out the label information
 
-            for i in xrange(self.datavector.samplemag):
+            for i in range(self.datavector.samplemag):
                 rowvalues =\
                    [str(self.datavector.columns[int(x)][i]) for x in columnlist]
                 v.writerow(rowvalues)
@@ -500,7 +503,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
         return
 
-    def OnExportQueries(self,event):
+    def OnExportQueries(self,_event):
         """
         Export the current query set to a query file that can be loaded later
         """
@@ -526,7 +529,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
                 if not self.MyDialog("File exist, Overwrite?"):
                     return
             try:
-                fildes = open(fpath,'wb')
+                fildes = open(fpath, 'w', newline='')
             except:
                 self.MyAlert("File " + fpath +\
                     " could not be opened for writing, check permissions")
@@ -553,8 +556,8 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
         selectionlist =\
-            [ self.tree.GetPyData(x)  for x in self.tree.GetSelections()\
-                if self.tree.GetPyData(x) != None ] #filter out trunk selections
+            [ self.tree.GetItemData(x)  for x in self.tree.GetSelections()\
+                if self.tree.GetItemData(x) != None ] #filter out trunk selections
         #log("SelectionList = "+str(selectionlist))
         if len(selectionlist) == 0:                  #no selections were made
             self.itemlist = []
@@ -600,13 +603,13 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             elif (self.lgndlen == 0):
                 legend = ""
 
-            # use a list comprehension with xrange to create the
+            # use a list comprehension with range to create the
             # co-ordinate tuples
             data = [(self.datavector.time_axis[x-1],\
-                float(columndata[x])) for x in xrange (1, numberofsamples)]
+                float(columndata[x])) for x in range (1, numberofsamples)]
 
             float_data = [float(columndata[x])\
-                for x in xrange(1, numberofsamples)]
+                for x in range(1, numberofsamples)]
 
             # draw points as a line
             line.append(wxPlot.PolyLine(data,
@@ -637,7 +640,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
         return
 
-    def OnSearchQuery(self, event):
+    def OnSearchQuery(self, _event):
         """
         Method called when a user types a search query that will be
         applied to the loaded tree of esxtop metrics
@@ -663,8 +666,8 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             regExObject = re.compile(
                                      self._raw(regExString.rstrip('\n')),
                                      re.IGNORECASE|re.VERBOSE)
-        except:
-            self.MyAlert("Unrecognizable Regular Expression!")
+        except re.error as e:
+            self.MyAlert(f"Invalid Regular Expression: {str(e)}")
             return
         query_display = (regExString.strip()).replace('\n',' ')
         #################################### HACK ALERT ################################
@@ -677,7 +680,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         if len(regExString) > MAXDisplayQueryLength:
             query_display = regExString[:MAXDisplayQueryLength] + "..."
 
-        for j in xrange(self.datavector.colmag-1): # ugly, fix me
+        for j in range(self.datavector.colmag-1): # ugly, fix me
             if j % 100 ==0:
                     dlg.Update(j)
             # if no match go to the next one
@@ -691,7 +694,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             m[2] = 'Query: ' + query_display
             # add the path into the t-node tree, truncating the
             # two null elements at the front of the list
-            result_set_tree.addMetric([ m[k] for k in xrange (2, len(m))])
+            result_set_tree.addMetric([ m[k] for k in range (2, len(m))])
         if result_set_tree.isZero():
             self.MyAlert("Empty Result set for query:\n " + regExString)
         else:
@@ -739,7 +742,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
 
-    def OnRightClick(self, event):
+    def OnRightClick(self, _event):
         """
         Handle right-clicks on a selection, throw up a context menu with
         possible options
@@ -747,7 +750,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.PopupMenu(MyPopupMenu(self), (-1, -1))
         return
 
-    def OnCloseDataset(self, event):
+    def OnCloseDataset(self, _event):
         """
         Close the current dataset and attempt to release all of the created
         objects and data structures
@@ -767,28 +770,37 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 class MyHelpDialog(wx.Dialog):
     """
-    A simple Dialog Widget that is used to display the preferences window
+    A simple Dialog Widget that is used to display the help window.
+    It contains a wx.html.HtmlWindow to display the content.
     """
 
-    def __init__(self, html_page=""):
-        wx.Dialog.__init__(self, None, -1, 'Help', size=(800, 500),
-                           style=wx.CAPTION)
-        okButton = wx.Button(self, wx.ID_OK, "OK", pos=(350, 445))
+    def __init__(self, parent, page_content):
+        super(MyHelpDialog, self).__init__(parent, -1, 'Help', size=(800, 500),
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        
+        html = wx.html.HtmlWindow(self, style=wx.html.HW_SCROLLBAR_AUTO)
+        html.SetPage(page_content)
+
+        okButton = wx.Button(self, wx.ID_OK, "OK")
         okButton.SetDefault()
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(html, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(okButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        self.SetSizer(sizer)
+        self.CentreOnParent()
 
 class MyPopupMenu(wx.Menu):
     def __init__(self, parent):
-        wx.Menu.__init__(self)
+        super(MyPopupMenu, self).__init__()
 
         self.parent = parent
 
-        delete = wx.MenuItem(self, wx.NewId(), 'Delete')
-        self.AppendItem(delete)
-        self.Bind(wx.EVT_MENU, self.OnDelete, id=delete.GetId())
+        delete_item = self.Append(-1, 'Delete')
+        self.Bind(wx.EVT_MENU, self.OnDelete, delete_item)
 
-        export = wx.MenuItem(self, wx.NewId(), 'Export')
-        self.AppendItem(export)
-        self.Bind(wx.EVT_MENU, self.OnExport, id=export.GetId())
+        export_item = self.Append(-1, 'Export')
+        self.Bind(wx.EVT_MENU, self.OnExport, export_item)
 
 
     def OnDelete(self, event):
