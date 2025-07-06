@@ -4,7 +4,7 @@ Created on Apr 20, 2012
 @author: l0r3zz
 '''
 version = "esxplot v1.5-06212025"
-copyright = """
+copyright_info = """
 (c)Copyright 2009 VMware Inc.
 (c)Copyright 2012 Geoff White
 
@@ -66,7 +66,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         # discover what kind of OS we are running on
         self.isWindowsG = True if os.name == 'nt' else False
         self.log = logging.getLogger('esxplot.%s' % __name__)
-        esxp_gui.EsxPlotFrame.__init__(self, parent, iid, title,
+        super(MyFrame, self).__init__(parent, iid, title,
                           wx.DefaultPosition, wx.Size(900, 450))
 
         self.datavector = csvl  # current dataset object reference
@@ -108,7 +108,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         # Customize zoom box appearance
         self.plotter.zoomColor = 'RED'
         self.plotter.zoomLine = 'DOTTED'
-        self.plotter.zoomWidth = 1
+        self.plotter.zoomWidth = 3
         # set up the Grid and tell MyPlotCanvas whether we're
         # running Windows or not
         self.plotter.enableGrid = True
@@ -187,7 +187,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         """
         if isinstance(message, str):
             self.textbox.AppendText(message)
-            self.log.warn("Console Status: %s" % message)
+            self.log.warning("Console Status: %s", message)
         elif isinstance (message, list):
             for m in message:
                 self.MyTextUpdate(m)
@@ -200,7 +200,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
     #Menu callbacks
-    def TimeToQuit(self, event):
+    def TimeToQuit(self, _event):
         """
         Exit the applixation
         """
@@ -209,16 +209,16 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.Close(True)                 # esxplot has left the building
 
     def OnCloseHelp(self, event):
-        if self.HelpIsLive:
-            self.HelpIsLive.Destroy()    #Destroy any Help windows lying around
-        self.Destroy()
+        # Called when the help dialog is closed.
+        self.HelpIsLive = None
+        event.GetEventObject().Destroy()
 
 
-    def OnAbout(self, event):
+    def OnAbout(self, _event):
         """
         Display an about message through a Message Dialog
         """
-        about_text = version + "\n" + copyright
+        about_text = version + "\n" + copyright_info
         dlg = wx.MessageDialog(self, about_text, "About Me",
                                wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
@@ -255,7 +255,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
             dlg.tcl_rgb16.SetValue(self.color[15])
             return
 
-        def _color_reset(event):
+        def _color_reset(_event):
             '''
             Reset the colors to the initial defaults when the button is pushed
             '''
@@ -336,17 +336,16 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
     def OnHelp(self,event):
         if self.HelpIsLive:
-            dlg = self.HelpIsLive
-        else:
-            dlg = MyHelpDialog()
+            self.HelpIsLive.Raise()
+            return
 
-        html = wx.html.HtmlWindow(dlg, pos=(10, 10), size=(780, 430),
-                                  style=wx.html.HW_SCROLLBAR_AUTO )
-        html.SetStandardFonts()
-        html.SetPage(exp_manpage.man_page )
-        dlg.Show()
+        # Create and show the help dialog.
+        # It's a non-modal dialog, so we track its instance.
+        dlg = MyHelpDialog(self, exp_manpage.manpage)
         self.HelpIsLive = dlg
-        return
+        # We bind the close event to our handler to know when it's gone.
+        self.HelpIsLive.Bind(wx.EVT_CLOSE, self.OnCloseHelp)
+        self.HelpIsLive.Show()
 
     def OnImportData(self, event): ### candidate for refactoring for 1.1
         """
@@ -504,7 +503,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
         return
 
-    def OnExportQueries(self,event):
+    def OnExportQueries(self,_event):
         """
         Export the current query set to a query file that can be loaded later
         """
@@ -641,7 +640,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
         return
 
-    def OnSearchQuery(self, event):
+    def OnSearchQuery(self, _event):
         """
         Method called when a user types a search query that will be
         applied to the loaded tree of esxtop metrics
@@ -743,7 +742,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 
 
-    def OnRightClick(self, event):
+    def OnRightClick(self, _event):
         """
         Handle right-clicks on a selection, throw up a context menu with
         possible options
@@ -751,7 +750,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.PopupMenu(MyPopupMenu(self), (-1, -1))
         return
 
-    def OnCloseDataset(self, event):
+    def OnCloseDataset(self, _event):
         """
         Close the current dataset and attempt to release all of the created
         objects and data structures
@@ -771,28 +770,37 @@ class MyFrame(esxp_gui.EsxPlotFrame):
 
 class MyHelpDialog(wx.Dialog):
     """
-    A simple Dialog Widget that is used to display the preferences window
+    A simple Dialog Widget that is used to display the help window.
+    It contains a wx.html.HtmlWindow to display the content.
     """
 
-    def __init__(self, html_page=""):
-        wx.Dialog.__init__(self, None, -1, 'Help', size=(800, 500),
-                           style=wx.CAPTION)
-        okButton = wx.Button(self, wx.ID_OK, "OK", pos=(350, 445))
+    def __init__(self, parent, page_content):
+        super(MyHelpDialog, self).__init__(parent, -1, 'Help', size=(800, 500),
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        
+        html = wx.html.HtmlWindow(self, style=wx.html.HW_SCROLLBAR_AUTO)
+        html.SetPage(page_content)
+
+        okButton = wx.Button(self, wx.ID_OK, "OK")
         okButton.SetDefault()
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(html, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(okButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        self.SetSizer(sizer)
+        self.CentreOnParent()
 
 class MyPopupMenu(wx.Menu):
     def __init__(self, parent):
-        wx.Menu.__init__(self)
+        super(MyPopupMenu, self).__init__()
 
         self.parent = parent
 
-        delete = wx.MenuItem(self, wx.NewId(), 'Delete')
-        self.AppendItem(delete)
-        self.Bind(wx.EVT_MENU, self.OnDelete, id=delete.GetId())
+        delete_item = self.Append(-1, 'Delete')
+        self.Bind(wx.EVT_MENU, self.OnDelete, delete_item)
 
-        export = wx.MenuItem(self, wx.NewId(), 'Export')
-        self.AppendItem(export)
-        self.Bind(wx.EVT_MENU, self.OnExport, id=export.GetId())
+        export_item = self.Append(-1, 'Export')
+        self.Bind(wx.EVT_MENU, self.OnExport, export_item)
 
 
     def OnDelete(self, event):
