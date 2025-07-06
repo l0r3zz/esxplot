@@ -3,7 +3,7 @@ Created on Apr 20, 2012
 
 @author: l0r3zz
 '''
-version = "esxplot v1.5-06212025"
+version = "esxplot v1.6-07052025"
 copyright_info = """
 (c)Copyright 2009 VMware Inc.
 (c)Copyright 2012 Geoff White
@@ -141,7 +141,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         self.Bind(wx.EVT_CLOSE, self.OnCloseHelp)
         self.SetStatusText(version)
         self.MyTextUpdate([version, copyright])
-        self.MyTextUpdate("wxPython version = " + wx.VERSION_STRING)
+        self.MyTextUpdate(" wxPython version = " + wx.VERSION_STRING)
 
         ###### HACK ALERT ################
         # Datasource is called at the top level to read in the csv files and build the

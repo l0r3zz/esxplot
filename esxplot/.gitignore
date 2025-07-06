@@ -1,6 +1,6 @@
-*.pyc
-*.pyo
-*.egg-info
+.pyc
+.pyo
+.egg-info
 dist
 build
 .tox
@@ -16,3 +16,5 @@ db.sqlite3-journal
 instance
 .mypy_cache
 .pytest_cache
+__pycache__
+.pytest
