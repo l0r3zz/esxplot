@@ -40,7 +40,7 @@ class MyApp(wx.App):
                           help="path to write the logfiles to")
         parser.add_argument('file', nargs='?', help="esxtop data file to load")
         args = parser.parse_args()
-        opts = args
+
 
         if isWindowsG:
             logfile_path = os.path.expanduser("~") +\
@@ -49,11 +49,11 @@ class MyApp(wx.App):
         else:
             logfile_path = os.path.expanduser("~") + "/.esxplot"
             logfile_name = "/esxplot.log"
-        if opts.debug:
+        if args.debug:
             logfile_path = None
 
-        if opts.logpath:
-            logfile_path = opts.logpath
+        if args.logpath:
+            logfile_path = args.logpath
         if logfile_path:
             if not os.access(logfile_path, os.F_OK):
                 try:
