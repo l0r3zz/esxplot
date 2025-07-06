@@ -108,7 +108,7 @@ class MyFrame(esxp_gui.EsxPlotFrame):
         # Customize zoom box appearance
         self.plotter.zoomColor = 'RED'
         self.plotter.zoomLine = 'DOTTED'
-        self.plotter.zoomWidth = 3        
+        self.plotter.zoomWidth = 1
         # set up the Grid and tell MyPlotCanvas whether we're
         # running Windows or not
         self.plotter.enableGrid = True
